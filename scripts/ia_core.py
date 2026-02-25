@@ -2,7 +2,7 @@
 # Nombre: Breylin Gabriel Sanchez Santana
 # Matricula: 23-EISN-2-003
 # Basado en el Lab-4 (búsqueda) y Lab-5 (Behavior Tree) del curso de IA
-# Contiene: Nodo, Mapa (clases base para los algoritmos de busqueda)
+# Contiene: Nodo, Mapa, BFS
 
 from collections import deque
 import heapq
@@ -107,3 +107,45 @@ class Mapa:
     def Costo(self, estado_final):
         return (abs(self.cordenadas[0] - estado_final.cordenadas[0])
                 + abs(self.cordenadas[1] - estado_final.cordenadas[1]))
+
+
+# =============================================================
+# BUSQUEDA EN ANCHURA (BFS)
+# Usa Cola FIFO (deque con popleft)
+# Garantiza camino mas corto en grafos sin pesos
+# Retorna: (camino, nodos_explorados)
+# =============================================================
+def BusquedaEnAnchura(estado_inicial, estado_final):
+    nodoactual = Nodo(estado_inicial, None)
+    nodosgenerado = deque()
+    nodosvisitados = set()
+    nodos_explorados = []  # Para el modo debug
+
+    # Busqueda
+    while nodoactual.dato != estado_final:
+        sucesores = nodoactual.GenerarSucesores()
+
+        for sucesor in sucesores:
+            temp = Nodo(sucesor, nodoactual)
+            if temp not in nodosvisitados:
+                nodosgenerado.append(temp)
+
+        nodosvisitados.add(nodoactual)
+        nodos_explorados.append(nodoactual.dato.cordenadas[:])
+
+        # Si no hay mas nodos por explorar, no hay solucion
+        if not nodosgenerado:
+            return [], nodos_explorados
+
+        while nodoactual in nodosvisitados:
+            if not nodosgenerado:
+                return [], nodos_explorados
+            nodoactual = nodosgenerado.popleft()  # FIFO: Cola
+
+    # Reconstruir camino subiendo por los padres
+    camino = []
+    while nodoactual:
+        camino.append(nodoactual.dato.cordenadas[:])
+        nodoactual = nodoactual.padre
+    camino.reverse()
+    return camino, nodos_explorados
