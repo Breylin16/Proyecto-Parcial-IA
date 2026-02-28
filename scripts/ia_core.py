@@ -2,7 +2,7 @@
 # Nombre: Breylin Gabriel Sanchez Santana
 # Matricula: 23-EISN-2-003
 # Basado en el Lab-4 (búsqueda) y Lab-5 (Behavior Tree) del curso de IA
-# Contiene: Nodo, Mapa, BFS
+# Contiene: Nodo, Mapa, BFS, DFS, A*
 
 from collections import deque
 import heapq
@@ -143,6 +143,91 @@ def BusquedaEnAnchura(estado_inicial, estado_final):
             nodoactual = nodosgenerado.popleft()  # FIFO: Cola
 
     # Reconstruir camino subiendo por los padres
+    camino = []
+    while nodoactual:
+        camino.append(nodoactual.dato.cordenadas[:])
+        nodoactual = nodoactual.padre
+    camino.reverse()
+    return camino, nodos_explorados
+
+
+# =============================================================
+# BUSQUEDA EN PROFUNDIDAD (DFS)
+# Usa Pila LIFO (deque con pop)
+# NO garantiza camino optimo
+# Retorna: (camino, nodos_explorados)
+# =============================================================
+def BusquedaEnProfundidad(estado_inicial, estado_final):
+    nodoactual = Nodo(estado_inicial, None)
+    nodosgenerado = deque()
+    nodosvisitados = set()
+    nodos_explorados = []  # Para el modo debug
+
+    # Busqueda
+    while nodoactual.dato != estado_final:
+        sucesores = nodoactual.GenerarSucesores()
+
+        for sucesor in sucesores:
+            temp = Nodo(sucesor, nodoactual)
+            if temp not in nodosvisitados:
+                nodosgenerado.append(temp)
+
+        nodosvisitados.add(nodoactual)
+        nodos_explorados.append(nodoactual.dato.cordenadas[:])
+
+        if not nodosgenerado:
+            return [], nodos_explorados
+
+        while nodoactual in nodosvisitados:
+            if not nodosgenerado:
+                return [], nodos_explorados
+            nodoactual = nodosgenerado.pop()  # LIFO: Pila
+
+    # Reconstruir camino
+    camino = []
+    while nodoactual:
+        camino.append(nodoactual.dato.cordenadas[:])
+        nodoactual = nodoactual.padre
+    camino.reverse()
+    return camino, nodos_explorados
+
+
+# =============================================================
+# ALGORITMO A* (A-STAR)
+# Usa Cola de Prioridad (heapq)
+# f(n) = g(n) + h(n) donde h = Distancia Manhattan
+# Garantiza camino optimo con heuristica admisible
+# Retorna: (camino, nodos_explorados)
+# =============================================================
+def Astar(estado_inicial, estado_final):
+    nodoactual = Nodo(estado_inicial, None, estado_inicial.Costo(estado_final))
+    nodosgenerado = []
+    nodosvisitados = set()
+    nodos_explorados = []  # Para el modo debug
+
+    heapq.heapify(nodosgenerado)
+
+    # Busqueda
+    while nodoactual.dato != estado_final:
+        sucesores = nodoactual.GenerarSucesores()
+
+        for sucesor in sucesores:
+            temp = Nodo(sucesor, nodoactual, sucesor.Costo(estado_final))
+            if temp not in nodosvisitados:
+                heapq.heappush(nodosgenerado, temp)
+
+        nodosvisitados.add(nodoactual)
+        nodos_explorados.append(nodoactual.dato.cordenadas[:])
+
+        if not nodosgenerado:
+            return [], nodos_explorados
+
+        while nodoactual in nodosvisitados:
+            if not nodosgenerado:
+                return [], nodos_explorados
+            nodoactual = heapq.heappop(nodosgenerado)
+
+    # Reconstruir camino
     camino = []
     while nodoactual:
         camino.append(nodoactual.dato.cordenadas[:])
