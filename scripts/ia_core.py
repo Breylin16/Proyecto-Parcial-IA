@@ -2,7 +2,7 @@
 # Nombre: Breylin Gabriel Sanchez Santana
 # Matricula: 23-EISN-2-003
 # Basado en el Lab-4 (búsqueda) y Lab-5 (Behavior Tree) del curso de IA
-# Contiene: Nodo, Mapa, BFS, DFS, A*
+# Contiene: Nodo, Mapa, BFS, DFS, A*, generador de mundo
 
 from collections import deque
 import heapq
@@ -234,3 +234,49 @@ def Astar(estado_inicial, estado_final):
         nodoactual = nodoactual.padre
     camino.reverse()
     return camino, nodos_explorados
+
+
+# =============================================================
+# GENERADOR DE MUNDO
+# Crea la matriz del mapa con paredes aleatorias
+# Garantiza que inicio, meta y posiciones de enemigos esten libres
+# =============================================================
+def generar_mundo(filas, columnas, porcentaje_paredes=0.25):
+    # Crear matriz vacia (todo suelo = 0)
+    mapa = [[0 for _ in range(columnas)] for _ in range(filas)]
+
+    # Colocar paredes aleatorias
+    for i in range(filas):
+        for j in range(columnas):
+            if random.random() < porcentaje_paredes:
+                mapa[i][j] = 1  # Pared
+
+    # Asegurar que las esquinas y bordes esten libres
+    # (para el jugador, la meta y los enemigos)
+    posiciones_libres = [
+        (1, 1),                    # Jugador
+        (filas - 2, columnas - 2), # Meta
+        (1, columnas - 2),         # Enemigo A*
+        (filas - 2, 1),            # Enemigo BFS (Patrulla punto A)
+        (filas // 2, columnas // 2), # Enemigo DFS (centro)
+    ]
+
+    # Limpiar las posiciones reservadas y sus alrededores
+    for pos in posiciones_libres:
+        fila, col = pos
+        for di in range(-1, 2):
+            for dj in range(-1, 2):
+                fi = fila + di
+                fj = col + dj
+                if 0 <= fi < filas and 0 <= fj < columnas:
+                    mapa[fi][fj] = 0
+
+    # Bordes del mapa como paredes
+    for i in range(filas):
+        mapa[i][0] = 1
+        mapa[i][columnas - 1] = 1
+    for j in range(columnas):
+        mapa[0][j] = 1
+        mapa[filas - 1][j] = 1
+
+    return mapa
