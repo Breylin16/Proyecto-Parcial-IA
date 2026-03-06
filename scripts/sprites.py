@@ -2,13 +2,15 @@
 # Nombre: Breylin Gabriel Sanchez Santana
 # Matricula: 23-EISN-2-003
 # Contiene las clases Jugador y Enemigo
-# El Enemigo usa los algoritmos de busqueda (Lab-4) para calcular rutas
+# El Enemigo usa el Arbol de Comportamiento (Lab-5) para decidir
+# y los algoritmos de busqueda (Lab-4) para calcular rutas
 
 import pygame
 import os
 from scripts.config import *
 from scripts.ia_core import (
-    Mapa, BusquedaEnAnchura, BusquedaEnProfundidad, Astar
+    Mapa, BusquedaEnAnchura, BusquedaEnProfundidad, Astar,
+    NodoBT, Selector, Secuencia, AccionBT, Invertir, Timer
 )
 
 # Ruta base para cargar sprites PNG
@@ -86,7 +88,16 @@ class Jugador:
 # =============================================================
 # CLASE ENEMIGO
 # Programa de Seguridad que persigue al jugador
-# Usa A*, BFS o DFS (Lab-4) para calcular la ruta
+# Utiliza un Arbol de Comportamiento (Lab-5) para decidir
+# que accion tomar en cada turno:
+#   Selector (raiz)
+#   ├── Secuencia: "Perseguir"
+#   │   ├── Condicion: jugador_cerca()
+#   │   └── Accion: perseguir_con_algoritmo()
+#   └── Accion: patrullar()
+#
+# Una vez decidida la accion, usa A*, BFS o DFS (Lab-4)
+# para calcular la ruta optima.
 # =============================================================
 class Enemigo:
     def __init__(self, x, y, algoritmo, color, nombre=""):
@@ -125,6 +136,33 @@ class Enemigo:
         # Radio de deteccion (distancia Manhattan)
         self.radio_deteccion = 8
 
+        # =====================================================
+        # ÁRBOL DE COMPORTAMIENTO (Behavior Tree)
+        # Construido siguiendo el patron del Lab-5 del profesor
+        # usando agregar_hijo() y clases Selector/Secuencia
+        # =====================================================
+
+        # Nodo raiz: Selector (prueba cada hijo hasta que uno tenga exito)
+        self.comportamiento = Selector()
+
+        # Rama 1: Secuencia de Persecucion
+        # Si el jugador esta cerca -> perseguirlo con el algoritmo
+        secuencia_persecucion = Secuencia()
+        condicion_cerca = AccionBT(self.jugador_cerca)
+        accion_perseguir = AccionBT(self.perseguir)
+        secuencia_persecucion.agregar_hijo(condicion_cerca)
+        secuencia_persecucion.agregar_hijo(accion_perseguir)
+
+        # Rama 2: Accion de Patrulla (fallback si no esta cerca)
+        accion_patrullar = AccionBT(self.patrullar)
+
+        # Estructura final del arbol:
+        # Selector
+        # ├── Secuencia [jugador_cerca? -> perseguir]
+        # └── Accion [patrullar]
+        self.comportamiento.agregar_hijo(secuencia_persecucion)
+        self.comportamiento.agregar_hijo(accion_patrullar)
+
     def configurar_patrulla(self, punto_a, punto_b):
         """Configura los puntos de patrulla para el enemigo BFS."""
         self.patrulla_a = punto_a
@@ -132,18 +170,21 @@ class Enemigo:
         self.objetivo_patrulla = punto_b  # Empieza yendo a B
 
     # ==========================================================
-    # FUNCIONES DE MOVIMIENTO
+    # FUNCIONES DEL ARBOL DE COMPORTAMIENTO
+    # Estas funciones son llamadas por los nodos AccionBT
     # ==========================================================
 
     def jugador_cerca(self):
-        """Verifica si el jugador esta dentro del radio de deteccion."""
+        """Condicion: verifica si el jugador esta dentro del radio.
+        Retorna True/False (patron del Lab-5)."""
         distancia = abs(self.x - self.jugador_x) + abs(self.y - self.jugador_y)
         cerca = distancia <= self.radio_deteccion
         self.jugador_detectado = cerca
         return cerca
 
     def perseguir(self):
-        """Calcula ruta hacia el jugador usando el algoritmo asignado."""
+        """Accion: calcula ruta hacia el jugador usando el algoritmo asignado.
+        Retorna True si encontro camino, False si no."""
         estado_inicio = Mapa(self.mapa_ref, [self.x, self.y])
         estado_fin = Mapa(self.mapa_ref, [self.jugador_x, self.jugador_y])
 
@@ -157,7 +198,8 @@ class Enemigo:
         return len(self.camino) > 0
 
     def patrullar(self):
-        """Se mueve entre puntos de patrulla o persigue si no tiene."""
+        """Accion: se mueve entre puntos de patrulla o hacia un objetivo fijo.
+        Si no tiene patrulla configurada, persigue al jugador igualmente."""
         estado_inicio = Mapa(self.mapa_ref, [self.x, self.y])
 
         if self.patrulla_a and self.patrulla_b and self.objetivo_patrulla:
@@ -180,17 +222,21 @@ class Enemigo:
 
         return True
 
+    # ==========================================================
+    # METODOS PRINCIPALES
+    # ==========================================================
+
     def calcular_movimiento(self, mapa, jugador_x, jugador_y):
-        """Decide si perseguir o patrullar, y calcula la ruta."""
+        """Actualiza referencias y ejecuta el arbol de comportamiento.
+        El arbol decide si perseguir o patrullar, y calcula la ruta."""
+        # Actualizar referencias para que las funciones del BT las usen
         self.mapa_ref = mapa
         self.jugador_x = jugador_x
         self.jugador_y = jugador_y
 
-        # Logica de decision: si esta cerca perseguir, si no patrullar
-        if self.jugador_cerca():
-            self.perseguir()
-        else:
-            self.patrullar()
+        # Ejecutar el arbol de comportamiento
+        # El Selector probara primero perseguir, si falla, patrullara
+        self.comportamiento.ejecutar()
 
     def mover(self):
         """Avanza 1 paso por el camino calculado."""

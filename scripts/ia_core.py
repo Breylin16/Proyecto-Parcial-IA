@@ -2,7 +2,7 @@
 # Nombre: Breylin Gabriel Sanchez Santana
 # Matricula: 23-EISN-2-003
 # Basado en el Lab-4 (búsqueda) y Lab-5 (Behavior Tree) del curso de IA
-# Contiene: Nodo, Mapa, BFS, DFS, A*, generador de mundo
+# Contiene: Nodo, Mapa, BFS, DFS, A*, generador de mundo, Arbol de Comportamiento
 
 from collections import deque
 import heapq
@@ -280,3 +280,90 @@ def generar_mundo(filas, columnas, porcentaje_paredes=0.25):
         mapa[filas - 1][j] = 1
 
     return mapa
+
+
+# =============================================================
+# ÁRBOL DE COMPORTAMIENTO (BEHAVIOR TREE)
+# Basado en el Lab-5 del curso de Inteligencia Artificial
+# Patron del profesor: Nodo base con agregar_hijo(),
+# Selector (OR), Secuencia (AND), Accion, Invertir, Timer
+# Retorna True/False (no strings)
+# =============================================================
+
+class NodoBT:
+    """Clase base para todos los nodos del arbol de comportamiento.
+    Cada nodo tiene una lista de hijos y un metodo ejecutar().
+    Tomada directamente del Lab-5."""
+    def __init__(self):
+        self.hijos = []
+
+    def agregar_hijo(self, hijo):
+        self.hijos.append(hijo)
+
+    def ejecutar(self):
+        pass
+
+
+class Selector(NodoBT):
+    """OR logico: ejecuta hijos en orden hasta que uno retorne True.
+    Si todos retornan False, retorna False.
+    Ejemplo: 'O persigue O patrulla'."""
+    def ejecutar(self):
+        for hijo in self.hijos:
+            if hijo.ejecutar():
+                return True
+        return False
+
+
+class Secuencia(NodoBT):
+    """AND logico: ejecuta hijos en orden hasta que uno retorne False.
+    Si todos retornan True, retorna True.
+    Ejemplo: 'SI esta cerca Y ENTONCES perseguir'."""
+    def ejecutar(self):
+        for hijo in self.hijos:
+            if not hijo.ejecutar():
+                return False
+        return True
+
+
+class AccionBT(NodoBT):
+    """Nodo hoja que ejecuta una funcion (lambda o metodo).
+    La funcion debe retornar True o False.
+    Basado en la clase Accion del Lab-5."""
+    def __init__(self, accion):
+        super().__init__()
+        self.accion = accion
+
+    def ejecutar(self):
+        return self.accion()
+
+
+class Invertir(NodoBT):
+    """Decorador que invierte el resultado de su hijo.
+    Si el hijo retorna True, retorna False y viceversa.
+    Util para condiciones negadas: 'NO hay objetivo'."""
+    def __init__(self, accion):
+        super().__init__()
+        self.agregar_hijo(accion)
+
+    def ejecutar(self):
+        return not self.hijos[0].ejecutar()
+
+
+class Timer(NodoBT):
+    """Decorador que espera N turnos antes de ejecutar su hijo.
+    Cuenta regresiva: mientras tiempo_restante > 0, retorna False.
+    Cuando llega a 0, ejecuta el hijo y reinicia el contador."""
+    def __init__(self, tiempo):
+        super().__init__()
+        self.tiempo = tiempo
+        self.tiempo_restante = tiempo
+
+    def ejecutar(self):
+        if self.tiempo_restante > 0:
+            self.tiempo_restante -= 1
+            return False
+        else:
+            self.tiempo_restante = self.tiempo
+            self.hijos[0].ejecutar()
+            return True
