@@ -26,17 +26,17 @@ FPS = 30
 # Entorno / Tablero
 COLOR_FONDO = (30, 30, 30)         # Gris oscuro (fondo general)
 COLOR_GRID = (50, 50, 50)          # Líneas de la cuadrícula
-COLOR_SUELO = (40, 40, 45)         # ⬜ Celda transitable (0)
-COLOR_PARED = (100, 100, 100)      # ⬛ Obstáculo/Pared (1)
-COLOR_META = (0, 255, 100)         # 🚩 Punto de destino (E)
+COLOR_SUELO = (40, 40, 45)         # Celda transitable (0)
+COLOR_PARED = (100, 100, 100)      # Obstáculo/Pared (1)
+COLOR_META = (0, 255, 100)         # Punto de destino (E)
 
 # Jugador (El Intruso)
-COLOR_JUGADOR = (0, 200, 255)      # 🔵 Azul cián
+COLOR_JUGADOR = (0, 200, 255)      # Azul cián
 
 # Enemigos (Programas de Seguridad) - Cada uno con color distinto
-COLOR_ENEMIGO_ASTAR = (255, 50, 50)      # 🔴 Rojo - "El Sabueso" (A*)
-COLOR_ENEMIGO_BFS = (255, 165, 0)        # 🟠 Naranja - "El Patrullero" (BFS)
-COLOR_ENEMIGO_DFS = (180, 0, 255)        # 🟣 Púrpura - "El Errático" (DFS)
+COLOR_ENEMIGO_ASTAR = (255, 50, 50)      # Rojo - "El Sabueso" (A*)
+COLOR_ENEMIGO_BFS = (255, 165, 0)        # Naranja - "El Patrullero" (BFS)
+COLOR_ENEMIGO_DFS = (180, 0, 255)        # Púrpura - "El Errático" (DFS)
 
 # --- MODO DEBUG (Tecla D) ---
 # Colores para la visualización de algoritmos
