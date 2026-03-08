@@ -2,7 +2,7 @@
 
 **Nombre:** Breylin Gabriel Sanchez Santana
 **Matrícula:** 23-EISN-2-003
-**Asignatura:** Inteligencia Artificial — 10mo Semestre
+**Asignatura:** Inteligencia Artificial
 **Universidad:** O&M
 
 ---
