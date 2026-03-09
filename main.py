@@ -70,7 +70,8 @@ def dibujar_texto_centrado(pantalla, texto, y, tamano=20, color=(255, 255, 255))
 
 def dibujar_panel_info(pantalla, turno, debug_activo, estado_juego,
                        enemigos, jugador, meta_x, meta_y,
-                       panel_x, panel_y, panel_ancho, panel_alto):
+                       panel_x, panel_y, panel_ancho, panel_alto,
+                       nivel=1, puntaje=0):
     """Dibuja el panel de informacion lateral con datos del juego."""
     # Fondo del panel (semitransparente)
     panel_surface = pygame.Surface((panel_ancho, panel_alto), pygame.SRCALPHA)
@@ -100,6 +101,12 @@ def dibujar_panel_info(pantalla, turno, debug_activo, estado_juego,
         dibujar_texto(pantalla, "DATOS EXTRAIDOS!", mx, y, 16, COLOR_META)
     elif estado_juego == "perdiste":
         dibujar_texto(pantalla, "INTRUSO DETECTADO!", mx, y, 16, COLOR_ENEMIGO_ASTAR)
+    y += espacio
+
+    # Nivel y puntaje
+    dibujar_texto(pantalla, f"Nivel: {nivel} / 3", mx, y, 16, (255, 220, 100))
+    y += espacio
+    dibujar_texto(pantalla, f"Puntaje: {puntaje}", mx, y, 16, (255, 220, 100))
     y += espacio
 
     # Turno
@@ -166,26 +173,39 @@ def dibujar_nombres_enemigos(pantalla, enemigos, tamano_celda, alto, offset_x, o
             pantalla.blit(texto, (x, y))
 
 
-def pantalla_game_over(pantalla, gano, ancho, alto):
-    """Muestra mensaje de victoria o derrota."""
+def pantalla_game_over(pantalla, gano, ancho, alto, puntaje=0, nivel=1, victoria_total=False):
+    """Muestra mensaje de victoria, derrota o victoria total."""
     # Fondo semitransparente
     overlay = pygame.Surface((ancho, alto), pygame.SRCALPHA)
     overlay.fill((0, 0, 0, 150))
     pantalla.blit(overlay, (0, 0))
 
-    if gano:
-        dibujar_texto_centrado(pantalla, "DATOS EXTRAIDOS CON EXITO", alto // 2 - 30,
+    if victoria_total:
+        dibujar_texto_centrado(pantalla, "VICTORIA TOTAL", alto // 2 - 50,
+                               42, (255, 220, 100))
+        dibujar_texto_centrado(pantalla, "Has completado los 3 niveles!",
+                               alto // 2, 22, COLOR_META)
+        dibujar_texto_centrado(pantalla, f"Puntaje final: {puntaje}",
+                               alto // 2 + 35, 24, (255, 255, 255))
+    elif gano:
+        dibujar_texto_centrado(pantalla, "DATOS EXTRAIDOS CON EXITO", alto // 2 - 40,
                                36, COLOR_META)
-        dibujar_texto_centrado(pantalla, "Has burlado a los programas de seguridad",
-                               alto // 2 + 20, 20, (200, 200, 200))
+        dibujar_texto_centrado(pantalla, f"Nivel {nivel} completado!",
+                               alto // 2 + 5, 20, (200, 200, 200))
+        dibujar_texto_centrado(pantalla, f"Puntaje: {puntaje}",
+                               alto // 2 + 35, 22, (255, 220, 100))
+        dibujar_texto_centrado(pantalla, "Preparando siguiente nivel...",
+                               alto // 2 + 65, 16, (150, 255, 150))
     else:
-        dibujar_texto_centrado(pantalla, "INTRUSO DETECTADO", alto // 2 - 30,
+        dibujar_texto_centrado(pantalla, "INTRUSO DETECTADO", alto // 2 - 40,
                                36, COLOR_ENEMIGO_ASTAR)
-        dibujar_texto_centrado(pantalla, "Los programas de seguridad te han atrapado",
-                               alto // 2 + 20, 20, (200, 200, 200))
+        dibujar_texto_centrado(pantalla, f"Llegaste al nivel {nivel}",
+                               alto // 2 + 5, 20, (200, 200, 200))
+        dibujar_texto_centrado(pantalla, f"Puntaje final: {puntaje}",
+                               alto // 2 + 35, 22, (255, 220, 100))
 
-    dibujar_texto_centrado(pantalla, "Enter / Boton A: Volver al Menu",
-                           alto // 2 + 70, 18, (150, 150, 150))
+    dibujar_texto_centrado(pantalla, "Enter / Boton A: Continuar",
+                           alto // 2 + 85, 18, (150, 150, 150))
 
 
 # =============================================================
@@ -281,10 +301,12 @@ def pantalla_menu(pantalla, ancho, alto):
 # INICIALIZAR JUEGO
 # =============================================================
 
-def inicializar_juego(filas, columnas):
+def inicializar_juego(filas, columnas, porcentaje_paredes=None):
     """Crea el mapa, jugador y enemigos. Retorna todo listo para jugar.
     generar_mundo() se llama UNA SOLA VEZ aqui — el mapa se guarda en RAM."""
-    mapa = generar_mundo(filas, columnas, PORCENTAJE_PAREDES)
+    if porcentaje_paredes is None:
+        porcentaje_paredes = PORCENTAJE_PAREDES
+    mapa = generar_mundo(filas, columnas, porcentaje_paredes)
 
     jugador = Jugador(POS_INICIAL_JUGADOR[1], POS_INICIAL_JUGADOR[0])
     meta_x = POS_INICIAL_META[1]
@@ -463,6 +485,11 @@ def main():
     musica_activa = True
     joy_cooldown = 0  # Evitar movimiento continuo con joystick
 
+    # === SISTEMA DE NIVELES ===
+    # 3 niveles progresivos: cada nivel tiene mas paredes
+    NIVELES_PAREDES = [0.25, 0.30, 0.35]  # Nivel 1, 2, 3
+    BONUS_POR_NIVEL = 50  # Puntos extra al completar un nivel
+
     # === BUCLE DE ESTADOS DEL JUEGO ===
     corriendo = True
     while corriendo:
@@ -474,67 +501,101 @@ def main():
         if resultado_menu == "salir":
             break
 
-        # --- JUEGO ---
-        # generar_mundo() se ejecuta UNA SOLA VEZ aqui
-        # La variable mapa se mantiene en RAM durante toda la partida
-        mapa, jugador, meta_x, meta_y, enemigos = inicializar_juego(FILAS, COLUMNAS)
-        turno = 0
+        # --- JUEGO CON NIVELES ---
+        nivel = 1
+        puntaje = 0
         debug_activo = False
-        estado_juego = "jugando"
+        jugando_niveles = True
 
-        jugando = True
-        while jugando and corriendo:
-            reloj.tick(FPS)
-            if joy_cooldown > 0:
-                joy_cooldown -= 1
+        while jugando_niveles and corriendo:
+            # generar_mundo() se ejecuta UNA VEZ por nivel
+            porcentaje = NIVELES_PAREDES[nivel - 1]
+            mapa, jugador, meta_x, meta_y, enemigos = inicializar_juego(
+                FILAS, COLUMNAS, porcentaje
+            )
+            turno = 0
+            estado_juego = "jugando"
 
-            for evento in pygame.event.get():
-                if evento.type == pygame.QUIT:
-                    corriendo = False
-                    jugando = False
+            jugando = True
+            while jugando and corriendo:
+                reloj.tick(FPS)
+                if joy_cooldown > 0:
+                    joy_cooldown -= 1
 
-                # --- CONTROL DE FOCO (PAUSA INTELIGENTE) ---
-                # Si la ventana pierde el foco, pausar todo
-                if evento.type == pygame.ACTIVEEVENT:
-                    if evento.state == 2 and evento.gain == 0:
-                        sigue = manejar_perdida_foco(musica_cargada, musica_activa)
-                        if not sigue:
-                            corriendo = False
+                for evento in pygame.event.get():
+                    if evento.type == pygame.QUIT:
+                        corriendo = False
+                        jugando = False
+                        jugando_niveles = False
+
+                    # --- CONTROL DE FOCO (PAUSA INTELIGENTE) ---
+                    if evento.type == pygame.ACTIVEEVENT:
+                        if evento.state == 2 and evento.gain == 0:
+                            sigue = manejar_perdida_foco(musica_cargada, musica_activa)
+                            if not sigue:
+                                corriendo = False
+                                jugando = False
+                                jugando_niveles = False
+
+                    if evento.type == pygame.KEYDOWN:
+                        # Tecla ESC: volver al menu
+                        if evento.key == pygame.K_ESCAPE:
+                            jugando = False
+                            jugando_niveles = False
+
+                        # Tecla D: Toggle debug mode
+                        if evento.key == pygame.K_d:
+                            debug_activo = not debug_activo
+
+                        # Tecla M: Toggle musica
+                        if evento.key == pygame.K_m:
+                            if musica_activa:
+                                if musica_cargada:
+                                    pygame.mixer.music.pause()
+                            else:
+                                if musica_cargada:
+                                    pygame.mixer.music.unpause()
+                            musica_activa = not musica_activa
+
+                        # ENTER en game over: continuar
+                        if evento.key == pygame.K_RETURN and estado_juego != "jugando":
                             jugando = False
 
-                if evento.type == pygame.KEYDOWN:
-                    # Tecla ESC: volver al menu
-                    if evento.key == pygame.K_ESCAPE:
-                        jugando = False
+                        # Flechas: movimiento (solo durante el juego)
+                        if estado_juego == "jugando":
+                            dx, dy = 0, 0
+                            if evento.key == pygame.K_UP:
+                                dx, dy = -1, 0
+                            elif evento.key == pygame.K_DOWN:
+                                dx, dy = 1, 0
+                            elif evento.key == pygame.K_LEFT:
+                                dx, dy = 0, -1
+                            elif evento.key == pygame.K_RIGHT:
+                                dx, dy = 0, 1
 
-                    # Tecla D: Toggle debug mode
-                    if evento.key == pygame.K_d:
-                        debug_activo = not debug_activo
+                            if dx != 0 or dy != 0:
+                                turno, estado_juego = procesar_movimiento(
+                                    dx, dy, jugador, mapa, enemigos, turno,
+                                    sonido_movimiento, sonido_victoria, sonido_derrota,
+                                    meta_x, meta_y, estado_juego
+                                )
 
-                    # Tecla M: Toggle musica
-                    if evento.key == pygame.K_m:
-                        if musica_activa:
-                            if musica_cargada:
-                                pygame.mixer.music.pause()
-                        else:
-                            if musica_cargada:
-                                pygame.mixer.music.unpause()
-                        musica_activa = not musica_activa
+                    # --- GAMEPAD ---
+                    if evento.type == pygame.JOYBUTTONDOWN:
+                        if evento.button == 0 and estado_juego != "jugando":
+                            jugando = False
+                        if evento.button == 7 and estado_juego != "jugando":
+                            jugando = False
 
-                    # ENTER en game over: volver al menu
-                    if evento.key == pygame.K_RETURN and estado_juego != "jugando":
-                        jugando = False
-
-                    # Flechas: movimiento (solo durante el juego)
-                    if estado_juego == "jugando":
+                    if evento.type == pygame.JOYHATMOTION and estado_juego == "jugando":
                         dx, dy = 0, 0
-                        if evento.key == pygame.K_UP:
+                        if evento.value == (0, 1):
                             dx, dy = -1, 0
-                        elif evento.key == pygame.K_DOWN:
+                        elif evento.value == (0, -1):
                             dx, dy = 1, 0
-                        elif evento.key == pygame.K_LEFT:
+                        elif evento.value == (-1, 0):
                             dx, dy = 0, -1
-                        elif evento.key == pygame.K_RIGHT:
+                        elif evento.value == (1, 0):
                             dx, dy = 0, 1
 
                         if dx != 0 or dy != 0:
@@ -544,22 +605,18 @@ def main():
                                 meta_x, meta_y, estado_juego
                             )
 
-                # --- GAMEPAD (SOPORTE DE CONTROLES) ---
-                if evento.type == pygame.JOYBUTTONDOWN:
-                    if evento.button == 0 and estado_juego != "jugando":  # A
-                        jugando = False
-                    if evento.button == 7 and estado_juego != "jugando":  # Start
-                        jugando = False
-
-                if evento.type == pygame.JOYHATMOTION and estado_juego == "jugando":
+                # Joystick analogico
+                if joystick and estado_juego == "jugando" and joy_cooldown == 0:
+                    eje_x = joystick.get_axis(0)
+                    eje_y = joystick.get_axis(1)
                     dx, dy = 0, 0
-                    if evento.value == (0, 1):   # D-pad arriba
+                    if eje_y < -0.5:
                         dx, dy = -1, 0
-                    elif evento.value == (0, -1):  # D-pad abajo
+                    elif eje_y > 0.5:
                         dx, dy = 1, 0
-                    elif evento.value == (-1, 0):  # D-pad izquierda
+                    elif eje_x < -0.5:
                         dx, dy = 0, -1
-                    elif evento.value == (1, 0):   # D-pad derecha
+                    elif eje_x > 0.5:
                         dx, dy = 0, 1
 
                     if dx != 0 or dy != 0:
@@ -568,76 +625,75 @@ def main():
                             sonido_movimiento, sonido_victoria, sonido_derrota,
                             meta_x, meta_y, estado_juego
                         )
+                        joy_cooldown = 8
 
-            # Joystick analogico (con cooldown para movimiento controlado)
-            if joystick and estado_juego == "jugando" and joy_cooldown == 0:
-                eje_x = joystick.get_axis(0)
-                eje_y = joystick.get_axis(1)
-                dx, dy = 0, 0
-                if eje_y < -0.5:
-                    dx, dy = -1, 0
-                elif eje_y > 0.5:
-                    dx, dy = 1, 0
-                elif eje_x < -0.5:
-                    dx, dy = 0, -1
-                elif eje_x > 0.5:
-                    dx, dy = 0, 1
+                # === DIBUJAR ===
+                pantalla.fill(COLOR_FONDO)
 
-                if dx != 0 or dy != 0:
-                    turno, estado_juego = procesar_movimiento(
-                        dx, dy, jugador, mapa, enemigos, turno,
-                        sonido_movimiento, sonido_victoria, sonido_derrota,
-                        meta_x, meta_y, estado_juego
-                    )
-                    joy_cooldown = 8  # Esperar 8 frames antes del siguiente movimiento
+                # 1. Tablero
+                dibujar_tablero(pantalla, mapa, tamano_celda,
+                                img_pared, img_suelo, offset_x, offset_y)
 
-            # === DIBUJAR (solo lectura de datos, sin calculos de IA) ===
-            pantalla.fill(COLOR_FONDO)
+                # 2. Meta
+                dibujar_meta(pantalla, meta_x, meta_y, tamano_celda,
+                             img_meta, offset_x, offset_y)
 
-            # 1. Tablero (centrado con offset)
-            dibujar_tablero(pantalla, mapa, tamano_celda,
-                            img_pared, img_suelo, offset_x, offset_y)
+                # 3. Debug
+                if debug_activo:
+                    for enemigo in enemigos:
+                        if enemigo.algoritmo == "Astar":
+                            enemigo.dibujar_debug(pantalla, COLOR_CAMINO_ASTAR,
+                                                  COLOR_CAMINO_ASTAR, tamano_celda,
+                                                  offset_x, offset_y)
+                        elif enemigo.algoritmo == "BFS":
+                            enemigo.dibujar_debug(pantalla, COLOR_EXPLORACION_BFS,
+                                                  COLOR_EXPLORACION_BFS, tamano_celda,
+                                                  offset_x, offset_y)
+                        elif enemigo.algoritmo == "DFS":
+                            enemigo.dibujar_debug(pantalla, COLOR_EXPLORACION_DFS,
+                                                  COLOR_EXPLORACION_DFS, tamano_celda,
+                                                  offset_x, offset_y)
 
-            # 2. Meta
-            dibujar_meta(pantalla, meta_x, meta_y, tamano_celda,
-                         img_meta, offset_x, offset_y)
-
-            # 3. Debug: visualizacion de algoritmos
-            if debug_activo:
+                # 4. Jugador y Enemigos
+                jugador.dibujar(pantalla, tamano_celda, offset_x, offset_y)
                 for enemigo in enemigos:
-                    if enemigo.algoritmo == "Astar":
-                        enemigo.dibujar_debug(pantalla, COLOR_CAMINO_ASTAR,
-                                              COLOR_CAMINO_ASTAR, tamano_celda,
-                                              offset_x, offset_y)
-                    elif enemigo.algoritmo == "BFS":
-                        enemigo.dibujar_debug(pantalla, COLOR_EXPLORACION_BFS,
-                                              COLOR_EXPLORACION_BFS, tamano_celda,
-                                              offset_x, offset_y)
-                    elif enemigo.algoritmo == "DFS":
-                        enemigo.dibujar_debug(pantalla, COLOR_EXPLORACION_DFS,
-                                              COLOR_EXPLORACION_DFS, tamano_celda,
-                                              offset_x, offset_y)
+                    enemigo.dibujar(pantalla, tamano_celda, offset_x, offset_y)
 
-            # 4. Jugador y Enemigos
-            jugador.dibujar(pantalla, tamano_celda, offset_x, offset_y)
-            for enemigo in enemigos:
-                enemigo.dibujar(pantalla, tamano_celda, offset_x, offset_y)
+                # 5. Nombres de enemigos (en debug)
+                if debug_activo:
+                    dibujar_nombres_enemigos(pantalla, enemigos, tamano_celda,
+                                             alto, offset_x, offset_y)
 
-            # 5. Nombres de enemigos (en debug)
-            if debug_activo:
-                dibujar_nombres_enemigos(pantalla, enemigos, tamano_celda,
-                                         alto, offset_x, offset_y)
+                # 6. Panel con nivel y puntaje
+                puntaje_actual = puntaje + turno
+                dibujar_panel_info(pantalla, turno, debug_activo, estado_juego,
+                                   enemigos, jugador, meta_x, meta_y,
+                                   panel_x, panel_y, panel_ancho, panel_alto,
+                                   nivel, puntaje_actual)
 
-            # 6. Panel de informacion lateral
-            dibujar_panel_info(pantalla, turno, debug_activo, estado_juego,
-                               enemigos, jugador, meta_x, meta_y,
-                               panel_x, panel_y, panel_ancho, panel_alto)
+                # 7. Game over / Victoria
+                if estado_juego != "jugando":
+                    victoria_total = (estado_juego == "ganaste" and nivel >= 3)
+                    pantalla_game_over(pantalla, estado_juego == "ganaste",
+                                       ancho, alto, puntaje_actual, nivel,
+                                       victoria_total)
 
-            # 7. Game over
-            if estado_juego != "jugando":
-                pantalla_game_over(pantalla, estado_juego == "ganaste", ancho, alto)
+                pygame.display.flip()
 
-            pygame.display.flip()
+            # --- Fin del nivel: calcular puntaje y decidir siguiente paso ---
+            puntaje += turno  # Sumar turnos sobrevividos
+
+            if estado_juego == "ganaste":
+                puntaje += BONUS_POR_NIVEL  # Bonus por ganar el nivel
+                if nivel >= 3:
+                    # Victoria Total — volver al menu
+                    jugando_niveles = False
+                else:
+                    # Siguiente nivel
+                    nivel += 1
+            else:
+                # Perdio — volver al menu
+                jugando_niveles = False
 
     pygame.quit()
     sys.exit()
