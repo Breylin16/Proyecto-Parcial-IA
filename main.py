@@ -419,7 +419,7 @@ def main():
     info = pygame.display.Info()
     ancho = info.current_w
     alto = info.current_h
-    pantalla = pygame.display.set_mode((ancho, alto), pygame.FULLSCREEN)
+    pantalla = pygame.display.set_mode((ancho, alto), pygame.NOFRAME)
     pygame.display.set_caption(TITULO_JUEGO)
     reloj = pygame.time.Clock()
 

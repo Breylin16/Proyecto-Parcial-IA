@@ -21,6 +21,18 @@ Cada enemigo usa un algoritmo de búsqueda diferente:
 
 Cada enemigo decide su acción usando un **Árbol de Comportamiento** (Behavior Tree) que evalúa si el jugador está dentro de su radio de detección de 8 celdas.
 
+### Sistema de niveles
+
+El juego tiene 3 niveles progresivos. Al completar un nivel, se genera un nuevo mapa con más paredes:
+
+| Nivel | Paredes | Dificultad |
+|---|---|---|
+| 1 | 25% | Normal |
+| 2 | 30% | Más paredes |
+| 3 | 35% | Máximo |
+
+Al completar el nivel 3 se logra la **Victoria Total**. El puntaje se calcula por turnos sobrevividos + bonus por nivel completado.
+
 ---
 
 ## Cómo ejecutar
@@ -95,7 +107,7 @@ Esto permite ver cómo BFS explora uniformemente, DFS va profundo, y A* va direc
 
 ## Video
 
-*(Link del video de YouTube aquí)*
+[Video de YouTube](https://youtu.be/GP72wU-3brk)
 
 ---
 
