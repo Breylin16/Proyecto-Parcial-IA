@@ -247,20 +247,25 @@ def pantalla_menu(pantalla, ancho, alto):
                 elif evento.key == pygame.K_ESCAPE:
                     return "salir"
 
-            # Soporte de Gamepad
+            # Soporte de Gamepad (Xbox + PS4)
             if evento.type == pygame.JOYBUTTONDOWN:
-                if evento.button == 0:  # Boton A / X
+                if evento.button == 0:  # Boton A (Xbox) / X (PS4)
                     if opcion == 0:
                         return "jugar"
                     else:
                         return "salir"
-                if evento.button == 7:  # Start
+                if evento.button in (7, 6):  # Start (Xbox) / Options (PS4)
                     return "jugar"
+                # D-pad como botones (PS4)
+                if evento.button == 11:  # D-pad arriba
+                    opcion = (opcion - 1) % len(opciones)
+                elif evento.button == 12:  # D-pad abajo
+                    opcion = (opcion + 1) % len(opciones)
 
             if evento.type == pygame.JOYHATMOTION:
-                if evento.value[1] == 1:  # D-pad arriba
+                if evento.value[1] == 1:  # D-pad arriba (Xbox)
                     opcion = (opcion - 1) % len(opciones)
-                elif evento.value[1] == -1:  # D-pad abajo
+                elif evento.value[1] == -1:  # D-pad abajo (Xbox)
                     opcion = (opcion + 1) % len(opciones)
 
         # Dibujar menu
@@ -599,12 +604,29 @@ def main():
                                     meta_x, meta_y, estado_juego
                                 )
 
-                    # --- GAMEPAD ---
+                    # --- GAMEPAD (Xbox + PS4) ---
                     if evento.type == pygame.JOYBUTTONDOWN:
                         if evento.button == 0 and estado_juego != "jugando":
                             jugando = False
-                        if evento.button == 7 and estado_juego != "jugando":
+                        if evento.button in (7, 6) and estado_juego != "jugando":
                             jugando = False
+                        # D-pad como botones (PS4)
+                        if estado_juego == "jugando":
+                            dx, dy = 0, 0
+                            if evento.button == 11:  # D-pad arriba
+                                dx, dy = -1, 0
+                            elif evento.button == 12:  # D-pad abajo
+                                dx, dy = 1, 0
+                            elif evento.button == 13:  # D-pad izquierda
+                                dx, dy = 0, -1
+                            elif evento.button == 14:  # D-pad derecha
+                                dx, dy = 0, 1
+                            if dx != 0 or dy != 0:
+                                turno, estado_juego = procesar_movimiento(
+                                    dx, dy, jugador, mapa, enemigos, turno,
+                                    sonido_movimiento, sonido_victoria, sonido_derrota,
+                                    meta_x, meta_y, estado_juego
+                                )
 
                     if evento.type == pygame.JOYHATMOTION and estado_juego == "jugando":
                         dx, dy = 0, 0
