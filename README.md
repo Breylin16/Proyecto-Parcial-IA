@@ -19,7 +19,7 @@ Cada enemigo usa un algoritmo de búsqueda diferente:
 | **El Patrullero** (naranja) | BFS | Patrulla entre dos puntos. Si te ve cerca, te persigue |
 | **El Errático** (morado) | DFS | Toma rutas impredecibles |
 
-Cada enemigo decide su acción usando un **Árbol de Comportamiento** (Behavior Tree) que evalúa si el jugador está dentro de su radio de detección de 8 celdas.
+Cada enemigo decide su acción usando un **Árbol de Comportamiento** (Behavior Tree) que evalúa si el jugador está dentro de su radio de detección. El juego cuenta con 6 enemigos simultáneos: 2 con A*, 2 con BFS y 2 con DFS.
 
 ### Sistema de niveles
 
