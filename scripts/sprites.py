@@ -134,7 +134,7 @@ class Enemigo:
         self.jugador_detectado = False
 
         # Radio de deteccion (distancia Manhattan)
-        self.radio_deteccion = 8
+        self.radio_deteccion = 12
 
         # =====================================================
         # ÁRBOL DE COMPORTAMIENTO (Behavior Tree)

@@ -37,6 +37,9 @@ COLOR_JUGADOR = (0, 200, 255)      # Azul cián
 COLOR_ENEMIGO_ASTAR = (255, 50, 50)      # Rojo - "El Sabueso" (A*)
 COLOR_ENEMIGO_BFS = (255, 165, 0)        # Naranja - "El Patrullero" (BFS)
 COLOR_ENEMIGO_DFS = (180, 0, 255)        # Púrpura - "El Errático" (DFS)
+COLOR_ENEMIGO_ASTAR2 = (255, 100, 100)   # Rojo claro - "El Centinela" (A*)
+COLOR_ENEMIGO_BFS2 = (255, 200, 80)      # Naranja claro - "El Rastreador" (BFS)
+COLOR_ENEMIGO_DFS2 = (200, 80, 255)      # Morado claro - "El Fantasma" (DFS)
 
 # --- MODO DEBUG (Tecla D) ---
 # Colores para la visualización de algoritmos
@@ -64,3 +67,7 @@ PORCENTAJE_PAREDES = 0.25  # 25% del mapa serán obstáculos
 # El Patrullero va de punto A a punto B y viceversa
 PATRULLA_PUNTO_A = (1, FILAS - 2)        # Esquina inferior izquierda
 PATRULLA_PUNTO_B = (COLUMNAS - 2, 1)     # Esquina superior derecha
+
+# Puntos de patrulla para el segundo BFS ("El Rastreador")
+PATRULLA2_PUNTO_A = (FILAS // 2, 1)      # Centro izquierda
+PATRULLA2_PUNTO_B = (FILAS // 2, COLUMNAS - 2)  # Centro derecha

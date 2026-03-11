@@ -316,16 +316,35 @@ def inicializar_juego(filas, columnas, porcentaje_paredes=None):
 
     # Enemigo 1: "El Sabueso" - A* (esquina superior derecha)
     sabueso = Enemigo(1, columnas - 2, "Astar", COLOR_ENEMIGO_ASTAR, "A*")
+    sabueso.radio_deteccion = 12
     enemigos.append(sabueso)
 
     # Enemigo 2: "El Patrullero" - BFS (esquina inferior izquierda)
     patrullero = Enemigo(filas - 2, 1, "BFS", COLOR_ENEMIGO_BFS, "BFS")
+    patrullero.radio_deteccion = 12
     patrullero.configurar_patrulla(PATRULLA_PUNTO_A, PATRULLA_PUNTO_B)
     enemigos.append(patrullero)
 
     # Enemigo 3: "El Erratico" - DFS (centro del mapa)
     erratico = Enemigo(filas // 2, columnas // 2, "DFS", COLOR_ENEMIGO_DFS, "DFS")
+    erratico.radio_deteccion = 12
     enemigos.append(erratico)
+
+    # Enemigo 4: "El Centinela" - A* (esquina inferior derecha)
+    centinela = Enemigo(filas - 2, columnas - 2, "Astar", COLOR_ENEMIGO_ASTAR2, "A*-2")
+    centinela.radio_deteccion = 10
+    enemigos.append(centinela)
+
+    # Enemigo 5: "El Rastreador" - BFS (centro izquierda)
+    rastreador = Enemigo(filas // 2, 1, "BFS", COLOR_ENEMIGO_BFS2, "BFS-2")
+    rastreador.radio_deteccion = 14
+    rastreador.configurar_patrulla(PATRULLA2_PUNTO_A, PATRULLA2_PUNTO_B)
+    enemigos.append(rastreador)
+
+    # Enemigo 6: "El Fantasma" - DFS (centro derecha)
+    fantasma = Enemigo(filas // 2, columnas - 2, "DFS", COLOR_ENEMIGO_DFS2, "DFS-2")
+    fantasma.radio_deteccion = 10
+    enemigos.append(fantasma)
 
     return mapa, jugador, meta_x, meta_y, enemigos
 

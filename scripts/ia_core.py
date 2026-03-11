@@ -256,9 +256,12 @@ def generar_mundo(filas, columnas, porcentaje_paredes=0.25):
     posiciones_libres = [
         (1, 1),                    # Jugador
         (filas - 2, columnas - 2), # Meta
-        (1, columnas - 2),         # Enemigo A*
-        (filas - 2, 1),            # Enemigo BFS (Patrulla punto A)
-        (filas // 2, columnas // 2), # Enemigo DFS (centro)
+        (1, columnas - 2),         # Enemigo A* (Sabueso)
+        (filas - 2, 1),            # Enemigo BFS (Patrullero)
+        (filas // 2, columnas // 2), # Enemigo DFS (Erratico)
+        (filas - 2, columnas - 2), # Enemigo A* 2 (Centinela)
+        (filas // 2, 1),           # Enemigo BFS 2 (Rastreador)
+        (filas // 2, columnas - 2), # Enemigo DFS 2 (Fantasma)
     ]
 
     # Limpiar las posiciones reservadas y sus alrededores (area 5x5)
