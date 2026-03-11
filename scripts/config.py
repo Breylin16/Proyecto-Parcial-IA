@@ -5,8 +5,8 @@
 TITULO_JUEGO = "IA HUNTER - Evasión Algorítmica"
 
 # Dimensiones de la pantalla (en píxeles)
-ANCHO_PANTALLA = 800
-ALTO_PANTALLA = 600
+ANCHO_PANTALLA = 1200
+ALTO_PANTALLA = 800
 
 # Configuración de la Cuadrícula (Grid)
 # El mapa es una matriz donde cada celda representa un estado del entorno

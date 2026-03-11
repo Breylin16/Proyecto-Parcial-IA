@@ -261,14 +261,15 @@ def generar_mundo(filas, columnas, porcentaje_paredes=0.25):
         (filas // 2, columnas // 2), # Enemigo DFS (centro)
     ]
 
-    # Limpiar las posiciones reservadas y sus alrededores
+    # Limpiar las posiciones reservadas y sus alrededores (area 5x5)
+    # Un area de 3x3 no era suficiente — el jugador podia quedar atrapado
     for pos in posiciones_libres:
         fila, col = pos
-        for di in range(-1, 2):
-            for dj in range(-1, 2):
+        for di in range(-2, 3):
+            for dj in range(-2, 3):
                 fi = fila + di
                 fj = col + dj
-                if 0 <= fi < filas and 0 <= fj < columnas:
+                if 0 < fi < filas - 1 and 0 < fj < columnas - 1:
                     mapa[fi][fj] = 0
 
     # Bordes del mapa como paredes
