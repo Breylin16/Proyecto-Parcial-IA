@@ -9,7 +9,7 @@
 
 ## ¿De qué trata?
 
-IA HUNTER es un juego por turnos en una cuadrícula donde controlas a un "intruso digital" que debe llegar a un punto de extracción (la meta) sin ser atrapado por 3 enemigos controlados por inteligencia artificial.
+IA HUNTER es un juego por turnos en una cuadrícula donde controlas a un "intruso digital" que debe llegar a un punto de extracción (la meta) sin ser atrapado por 6 enemigos controlados por inteligencia artificial.
 
 Cada enemigo usa un algoritmo de búsqueda diferente:
 
@@ -18,6 +18,9 @@ Cada enemigo usa un algoritmo de búsqueda diferente:
 | **El Sabueso** (rojo) | A* | Siempre encuentra la ruta más corta hacia ti |
 | **El Patrullero** (naranja) | BFS | Patrulla entre dos puntos. Si te ve cerca, te persigue |
 | **El Errático** (morado) | DFS | Toma rutas impredecibles |
+| **El Centinela** (rojo claro) | A* | Embosca desde la esquina opuesta |
+| **El Rastreador** (naranja claro) | BFS | Patrulla el centro del mapa con radio amplio |
+| **El Fantasma** (morado claro) | DFS | Aparece con caminos sorpresa |
 
 Cada enemigo decide su acción usando un **Árbol de Comportamiento** (Behavior Tree) que evalúa si el jugador está dentro de su radio de detección. El juego cuenta con 6 enemigos simultáneos: 2 con A*, 2 con BFS y 2 con DFS.
 
